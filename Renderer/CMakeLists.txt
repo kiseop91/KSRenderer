@@ -25,4 +25,4 @@ target_include_directories( ${TargetName} PUBLIC
     ${CMAKE_SOURCE_DIR}/library/metal-cpp
 )
 
-target_link_libraries(${TargetName} PRIVATE ${FRAMEWORK})
+target_link_libraries(${TargetName} PUBLIC ${FRAMEWORK})

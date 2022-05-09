@@ -4,12 +4,10 @@ project(Renderer LANGUAGES CXX)
 set(TargetName Renderer)
 
 # 예제에서 사용하는 애플 프레임워크
-find_library(Cocoa_lib Cocoa)
 find_library(Metal_lib Metal)
-find_library(Foundation_lib Foundation)
 find_library(CoreGraphics_lib CoreGraphics)
 find_library(MetalKit_lib MetalKit)
-set(FRAMEWORK ${Cocoa_lib} ${Metal_lib} ${Foundation_lib} ${CoreGraphics_lib} ${MetalKit_lib})
+set(FRAMEWORK ${Metal_lib} ${CoreGraphics_lib} ${MetalKit_lib})
 
 add_library(${TargetName} STATIC)
 target_sources(${TargetName} PRIVATE src/Renderer.cpp)

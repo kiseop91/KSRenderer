@@ -74,13 +74,13 @@ void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotificati
 
     _pMtkView = MTK::View::alloc()->init( frame, _pDevice );
     _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
-    _pMtkView->setClearColor( MTL::ClearColor::Make( 1.0, 0.0, 0.0, 1.0 ) );
+    _pMtkView->setClearColor( MTL::ClearColor::Make( 0.3, 0.3, 0.3, 1.0 ) );
 
     _pViewDelegate = new MyMTKViewDelegate( _pDevice );
     _pMtkView->setDelegate( _pViewDelegate );
 
     _pWindow->setContentView( _pMtkView );
-    _pWindow->setTitle( NS::String::string( "00 - Window", NS::StringEncoding::UTF8StringEncoding ) );
+    _pWindow->setTitle( NS::String::string( "KSRenderer", NS::StringEncoding::UTF8StringEncoding ) );
 
     _pWindow->makeKeyAndOrderFront( nullptr );
 

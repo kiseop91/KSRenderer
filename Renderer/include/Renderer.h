@@ -14,6 +14,12 @@ class Renderer
         void draw( MTK::View* pView );
 
     private:
+        void buildShaders();
+        void buildBuffers();
+    private:
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
+        MTL::RenderPipelineState* _pPSO;
+        MTL::Buffer* _pVertexPositionsBuffer;
+        MTL::Buffer* _pVertexColorsBuffer;
 };

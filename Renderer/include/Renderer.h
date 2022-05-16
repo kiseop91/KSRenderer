@@ -22,4 +22,5 @@ class Renderer
         MTL::RenderPipelineState* _pPSO;
         MTL::Buffer* _pVertexPositionsBuffer;
         MTL::Buffer* _pVertexColorsBuffer;
+        MTL::Buffer* _pIndexBuffer;
 };

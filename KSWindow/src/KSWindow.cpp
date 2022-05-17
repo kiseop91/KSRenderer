@@ -2,6 +2,10 @@
 #include <Renderer.h>
 #include <iostream>
 
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
 MyAppDelegate::~MyAppDelegate()
 {
     _pMtkView->release();
@@ -64,11 +68,12 @@ void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotificati
 {
     CGRect frame = (CGRect){ {100.0, 100.0}, {512.0, 512.0} };
 
-    _pWindow = NS::Window::alloc()->init(
-        frame,
-        NS::WindowStyleMaskClosable|NS::WindowStyleMaskTitled,
-        NS::BackingStoreBuffered,
-        false );
+    glfwInit();
+    GLFWwindow* window = glfwCreateWindow(800,800, "test", NULL,NULL);
+    auto nswindow = (NS::Window*)glfwGetCocoaWindow(window);
+    
+   // nswindow->close();
+    _pWindow = nswindow;
  
     _pDevice = MTL::CreateSystemDefaultDevice();
 
@@ -105,5 +110,5 @@ MyMTKViewDelegate::~MyMTKViewDelegate()
 
 void MyMTKViewDelegate::drawInMTKView( MTK::View* pView )
 {
-    _pRenderer->draw( pView );
+   // _pRenderer->draw( pView );
 }

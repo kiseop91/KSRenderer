@@ -8,6 +8,10 @@ set(TargetName KSWindow)
 # Foundation : Access essential data types, collections, and operating-system services to define the base layer of functionality for your app.
 find_library(Cocoa_lib Cocoa)
 find_library(Foundation_lib Foundation)
+
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/library/GLFW/lib/cmake/glfw3")
+find_package(glfw3 CONFIG REQUIRED)
+
 set(FRAMEWORK ${Cocoa_lib} ${Foundation_lib})
 
 add_library(${TargetName} STATIC)
@@ -22,4 +26,4 @@ target_include_directories( ${TargetName} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${TargetName} PUBLIC Renderer ${FRAMEWORK})
+target_link_libraries(${TargetName} PUBLIC Renderer ${FRAMEWORK} glfw)

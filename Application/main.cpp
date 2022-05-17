@@ -5,18 +5,43 @@
 
 #include <KSWindow.h>
 #include <Renderer.h>
+#include <iostream>
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
 
 int main( int argc, char* argv[] )
 {
-    NS::AutoreleasePool* pAutoreleasePool = NS::AutoreleasePool::alloc()->init();
+    glfwInit();
+    CGRect frame = (CGRect){ {100.0, 100.0}, {512.0, 512.0} };
+    GLFWwindow* window = glfwCreateWindow(512, 512, "KSRenderer", NULL,NULL);
+    auto nswindow = (NS::Window*)glfwGetCocoaWindow(window);
+     
+    auto _pDevice = MTL::CreateSystemDefaultDevice();
 
-    MyAppDelegate del;
+    auto _pMtkView = MTK::View::alloc()->init( frame, _pDevice );
+    _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
+    _pMtkView->setClearColor( MTL::ClearColor::Make( 0.3, 0.3, 0.3, 1.0 ) );
 
-    NS::Application* pSharedApplication = NS::Application::sharedApplication();
-    pSharedApplication->setDelegate( &del );
-    pSharedApplication->run();
+    nswindow->setContentView( _pMtkView );
+    nswindow->makeKeyAndOrderFront( nullptr );  
+    
+    Renderer renderer(_pDevice);
 
-    pAutoreleasePool->release();
+int i = 0;
+    while(!glfwWindowShouldClose(window))
+    {
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        std::cout <<  i++ <<" : "<< width << " , " << height << std::endl;
 
+        renderer.draw(_pMtkView);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 0;
 }

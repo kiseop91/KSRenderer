@@ -1,3 +1,4 @@
+![macos build](https://github.com/kiseop91/KSRenderer/actions/workflows/cmake.yml/badge.svg)
 # 🎥 KSRenderer
 
 # 📁 디렉토리 

@@ -12,36 +12,21 @@
 
 int main( int argc, char* argv[] )
 {
+    std::cout << "init";
     glfwInit();
-    CGRect frame = (CGRect){ {100.0, 100.0}, {512.0, 512.0} };
-    GLFWwindow* window = glfwCreateWindow(512, 512, "KSRenderer", NULL,NULL);
-    auto nswindow = (NS::Window*)glfwGetCocoaWindow(window);
-     
-    auto _pDevice = MTL::CreateSystemDefaultDevice();
-
-    auto _pMtkView = MTK::View::alloc()->init( frame, _pDevice );
-    _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
-    _pMtkView->setClearColor( MTL::ClearColor::Make( 0.3, 0.3, 0.3, 1.0 ) );
-
-    nswindow->setContentView( _pMtkView );
-    nswindow->makeKeyAndOrderFront( nullptr );  
+    GLFWwindow* window = glfwCreateWindow(800,800, "test", NULL,NULL);
+    NS::Window* _pWindow = (NS::Window*)glfwGetCocoaWindow(window);
     
-    Renderer renderer(_pDevice);
-
-int i = 0;
-    while(!glfwWindowShouldClose(window))
-    {
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-        std::cout <<  i++ <<" : "<< width << " , " << height << std::endl;
-
-        renderer.draw(_pMtkView);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    MetalSurface surface(_pWindow);
+    Renderer renderer(surface.GetDevice());
+    
+   while(!glfwWindowShouldClose(window))
+   {
+       renderer.SetRenderPassDescriptor(surface.GetCurrentRenderPassDescriptor());
+       renderer.draw(surface.GetCurrentDrawable());
+       
+       glfwSwapBuffers(window);
+       glfwPollEvents();
+   }
     return 0;
 }

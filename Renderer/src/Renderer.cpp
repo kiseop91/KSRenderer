@@ -9,11 +9,6 @@
 
 #include <simd/simd.h>
 
-Renderer::Renderer()
-{
-     std::cout << "Renderer Test\n";
-}
-
 Renderer::Renderer( MTL::Device* pDevice )
 : _pDevice( pDevice->retain() )
 {
@@ -106,10 +101,13 @@ void Renderer::buildBuffers()
     MTL::Buffer* pVertexPositionsBuffer = _pDevice->newBuffer( positionsDataSize, MTL::ResourceStorageModeManaged );
     MTL::Buffer* pVertexColorsBuffer = _pDevice->newBuffer( colorDataSize, MTL::ResourceStorageModeManaged );
     MTL::Buffer* pIndexBuffer = _pDevice->newBuffer( indexDataSize, MTL::ResourceStorageModeManaged );
+    MTL::Buffer* rot = _pDevice->newBuffer( sizeof( float ), MTL::ResourceStorageModeManaged );
+
 
     _pVertexPositionsBuffer = pVertexPositionsBuffer;
     _pVertexColorsBuffer = pVertexColorsBuffer;
     _pIndexBuffer = pIndexBuffer;
+    _pRotBuffer = rot;
 
     memcpy( _pVertexPositionsBuffer->contents(), positions, positionsDataSize );
     memcpy( _pVertexColorsBuffer->contents(), colors, colorDataSize );
@@ -119,23 +117,32 @@ void Renderer::buildBuffers()
     _pVertexColorsBuffer->didModifyRange( NS::Range::Make( 0, _pVertexColorsBuffer->length() ) );
     _pIndexBuffer->didModifyRange( NS::Range::Make( 0, _pIndexBuffer->length() ) );
 }
-
-void Renderer::draw( MTK::View* pView )
+void Renderer::SetRenderPassDescriptor(MTL::RenderPassDescriptor* pRpd)
+{
+    _pRpd = pRpd;
+}
+void Renderer::draw( CA::MetalDrawable* _renderTarget)
 {
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
-    MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
-    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
+    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( _pRpd );
 
     pEnc->setRenderPipelineState( _pPSO );
     pEnc->setVertexBuffer( _pVertexPositionsBuffer, 0, 0 );
     pEnc->setVertexBuffer( _pVertexColorsBuffer, 0, 1 );
-    //pEnc->drawPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6) );
+
+    static float move;
+    move +=0.001f;
+    float s = sinf(move);
+    memcpy( _pRotBuffer->contents(), &s, sizeof( float ) );
+    _pRotBuffer->didModifyRange( NS::Range::Make( 0, _pRotBuffer->length() ) );
+    pEnc->setVertexBuffer(_pRotBuffer, 0, 2);
+
     pEnc->drawIndexedPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, 6, MTL::IndexType::IndexTypeUInt16, _pIndexBuffer, 0, 1);
 
     pEnc->endEncoding();
-    pCmd->presentDrawable( pView->currentDrawable() );
+    pCmd->presentDrawable( _renderTarget );
     pCmd->commit();
 
     pPool->release();

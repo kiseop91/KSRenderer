@@ -9,11 +9,14 @@ struct v2f
 
 v2f vertex vertexMain( uint vertexId [[vertex_id]],
                         device const float3* positions [[buffer(0)]],
-                        device const float3* colors [[buffer(1)]] )
+                        device const float3* colors [[buffer(1)]] ,
+                        device const float* rot [[buffer(2)]]
+                        )
 {
     v2f o;
-    o.position = float4( positions[ vertexId ], 1.0 );
-    o.color = half3 ( colors[ vertexId ] );
+    o.position = float4( positions[ vertexId ] , 1.0 );
+    o.position.x += *rot;
+    o.color = half3 ( colors[ vertexId ] * (*rot) );
     return o;
 }
 

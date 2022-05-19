@@ -12,7 +12,6 @@
 
 int main( int argc, char* argv[] )
 {
-    std::cout << "init";
     glfwInit();
     GLFWwindow* window = glfwCreateWindow(800,800, "test", NULL,NULL);
     NS::Window* _pWindow = (NS::Window*)glfwGetCocoaWindow(window);

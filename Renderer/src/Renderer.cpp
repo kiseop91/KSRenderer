@@ -7,12 +7,13 @@
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
 
-#include <simd/simd.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_metal.h"
 
-Renderer::Renderer()
-{
-     std::cout << "Renderer Test\n";
-}
+#include <GLFW/glfw3.h>
+
+#include <simd/simd.h>
 
 Renderer::Renderer( MTL::Device* pDevice )
 : _pDevice( pDevice->retain() )
@@ -106,10 +107,13 @@ void Renderer::buildBuffers()
     MTL::Buffer* pVertexPositionsBuffer = _pDevice->newBuffer( positionsDataSize, MTL::ResourceStorageModeManaged );
     MTL::Buffer* pVertexColorsBuffer = _pDevice->newBuffer( colorDataSize, MTL::ResourceStorageModeManaged );
     MTL::Buffer* pIndexBuffer = _pDevice->newBuffer( indexDataSize, MTL::ResourceStorageModeManaged );
+    MTL::Buffer* rot = _pDevice->newBuffer( sizeof( float ), MTL::ResourceStorageModeManaged );
+
 
     _pVertexPositionsBuffer = pVertexPositionsBuffer;
     _pVertexColorsBuffer = pVertexColorsBuffer;
     _pIndexBuffer = pIndexBuffer;
+    _pRotBuffer = rot;
 
     memcpy( _pVertexPositionsBuffer->contents(), positions, positionsDataSize );
     memcpy( _pVertexColorsBuffer->contents(), colors, colorDataSize );
@@ -119,24 +123,53 @@ void Renderer::buildBuffers()
     _pVertexColorsBuffer->didModifyRange( NS::Range::Make( 0, _pVertexColorsBuffer->length() ) );
     _pIndexBuffer->didModifyRange( NS::Range::Make( 0, _pIndexBuffer->length() ) );
 }
-
-void Renderer::draw( MTK::View* pView )
+void Renderer::SetRenderPassDescriptor(MTL::RenderPassDescriptor* pRpd)
+{
+    _pRpd = pRpd;
+}
+void Renderer::draw( CA::MetalDrawable* _renderTarget)
 {
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
-    MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
-    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
+    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( _pRpd );
 
     pEnc->setRenderPipelineState( _pPSO );
     pEnc->setVertexBuffer( _pVertexPositionsBuffer, 0, 0 );
     pEnc->setVertexBuffer( _pVertexColorsBuffer, 0, 1 );
-    //pEnc->drawPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6) );
+
+    static float move;
+    move +=0.001f;
+    float s = sinf(move);
+    memcpy( _pRotBuffer->contents(), &s, sizeof( float ) );
+    _pRotBuffer->didModifyRange( NS::Range::Make( 0, _pRotBuffer->length() ) );
+    pEnc->setVertexBuffer(_pRotBuffer, 0, 2);
+
     pEnc->drawIndexedPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, 6, MTL::IndexType::IndexTypeUInt16, _pIndexBuffer, 0, 1);
 
+    static float f = 0.0f;
+    static int counter = 0;
+
+    ImGui::ShowDemoWindow();
+    ImGui::Begin("Hello, world!");                          
+    ImGui::Text("This is some useful text.");               
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);           
+    if (ImGui::Button("Button"))                            
+        counter++;
+    ImGui::SameLine();
+    ImGui::Text("counter = %d", counter);
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(),pCmd, pEnc);
+
     pEnc->endEncoding();
-    pCmd->presentDrawable( pView->currentDrawable() );
+    pCmd->presentDrawable( _renderTarget );
     pCmd->commit();
+    
+
 
     pPool->release();
 }

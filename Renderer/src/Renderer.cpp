@@ -7,6 +7,12 @@
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_metal.h"
+
+#include <GLFW/glfw3.h>
+
 #include <simd/simd.h>
 
 Renderer::Renderer( MTL::Device* pDevice )
@@ -141,9 +147,29 @@ void Renderer::draw( CA::MetalDrawable* _renderTarget)
 
     pEnc->drawIndexedPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, 6, MTL::IndexType::IndexTypeUInt16, _pIndexBuffer, 0, 1);
 
+    static float f = 0.0f;
+    static int counter = 0;
+
+    ImGui::ShowDemoWindow();
+    ImGui::Begin("Hello, world!");                          
+    ImGui::Text("This is some useful text.");               
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);           
+    if (ImGui::Button("Button"))                            
+        counter++;
+    ImGui::SameLine();
+    ImGui::Text("counter = %d", counter);
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(),pCmd, pEnc);
+
     pEnc->endEncoding();
     pCmd->presentDrawable( _renderTarget );
     pCmd->commit();
+    
+
 
     pPool->release();
 }

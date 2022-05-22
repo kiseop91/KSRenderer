@@ -16,7 +16,7 @@ class Renderer
     private:
         void buildShaders();
         void buildBuffers();
-    private:
+    public:
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::RenderPipelineState* _pPSO;

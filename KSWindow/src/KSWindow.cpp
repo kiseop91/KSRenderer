@@ -10,7 +10,7 @@
 
 MetalSurface::MetalSurface(NS::Window* _pWindow)
 {
-    CGRect frame = (CGRect){ {100.0, 100.0}, {512.0, 512.0} };
+    CGRect frame = (CGRect){ {0.0, 0.0}, {800.0, 800.0} };
 
     _pDevice = MTL::CreateSystemDefaultDevice();
 
@@ -18,9 +18,7 @@ MetalSurface::MetalSurface(NS::Window* _pWindow)
     _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
     _pMtkView->setClearColor( MTL::ClearColor::Make( 0.3, 0.3, 0.3, 1.0 ) );
     
-    _pWindow->setContentView( _pMtkView );
-    _pWindow->setTitle( NS::String::string( "KSRenderer", NS::StringEncoding::UTF8StringEncoding ) );
-    _pWindow->makeKeyAndOrderFront( nullptr );
+
 }
 
 MTL::Device* MetalSurface::GetDevice()

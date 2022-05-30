@@ -14,7 +14,7 @@
                 "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
                 "CMAKE_TOOLCHAIN_FILE": {
                     "type": "FILEPATH",
-                    "value": "/Users/kiseop/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                    "value": "~/vcpkg/scripts/buildsystems/vcpkg.cmake"
                 },
                 "VCPKG_TARGET_TRIPLET": "arm64-osx",
                 "CMAKE_BUILD_TYPE": "Release"
@@ -33,7 +33,7 @@
                 "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
                 "CMAKE_TOOLCHAIN_FILE": {
                     "type": "FILEPATH",
-                    "value": "/Users/kiseop/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                    "value": "~/vcpkg/scripts/buildsystems/vcpkg.cmake"
                 },
                 "VCPKG_TARGET_TRIPLET": "arm64-osx",
                 "CMAKE_BUILD_TYPE": "Debug"

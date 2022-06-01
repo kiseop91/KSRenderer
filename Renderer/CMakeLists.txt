@@ -7,6 +7,9 @@ set(TargetName Renderer)
 find_library(Metal_lib Metal)
 find_library(CoreGraphics_lib CoreGraphics)
 find_library(MetalKit_lib MetalKit)
+find_package(tinyobjloader CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+
 set(FRAMEWORK ${Metal_lib} ${CoreGraphics_lib} ${MetalKit_lib})
 
 add_library(${TargetName} STATIC)
@@ -23,4 +26,4 @@ target_include_directories( ${TargetName} PUBLIC
     ${CMAKE_SOURCE_DIR}/library/metal-cpp
 )
 
-target_link_libraries(${TargetName} PUBLIC ${FRAMEWORK})
+target_link_libraries(${TargetName} PUBLIC ${FRAMEWORK} tinyobjloader::tinyobjloader glm::glm)

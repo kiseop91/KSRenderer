@@ -2,6 +2,8 @@
     "name": "ksrenderer",
     "version-string": "0.0.1",
     "dependencies": [
-      "catch2"
+      "catch2",
+      "tinyobjloader",
+      "glm"
     ]
   }

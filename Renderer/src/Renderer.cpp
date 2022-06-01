@@ -7,11 +7,46 @@
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 #include <simd/simd.h>
+#include <map>
+
+struct Vertex
+{
+public:
+    glm::vec3 pos;
+    Vertex(){}
+
+    bool operator==(const Vertex &other) const
+    {
+        return pos == other.pos ;
+    }
+};
 
 Renderer::Renderer()
 {
      std::cout << "Renderer Test\n";
+
+    //  tinyobj::attrib_t attrib;
+    //  std::vector<tinyobj::shape_t> shapes;
+    //  std::vector<tinyobj::material_t> materials;
+    //  std::string warn, err;
+
+    //  if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, ""))
+    // {
+    //     throw std::runtime_error(warn + err);
+    // }
+
+    //  std::map<Vertex, uint32_t> uniqueVertices{};
 }
 
 Renderer::Renderer( MTL::Device* pDevice )
@@ -33,7 +68,7 @@ Renderer::~Renderer()
 
 void Renderer::buildShaders()
 {
-     std::ifstream in("/Users/kiseop/development/KSRenderer/Renderer/shader/shader.metal");
+     std::ifstream in("/Users/gimgiseob/Dev/KSRenderer/Renderer/shader/shader.metal");
      std::string shaderSource;
      if (in.is_open()) {
           in.seekg(0, std::ios::end);

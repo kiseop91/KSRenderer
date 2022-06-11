@@ -9,6 +9,45 @@
 
 #include <simd/simd.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+#include <vector>
+#include <unordered_map>
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+
+struct Vertex
+{
+public:
+    glm::vec3 pos;
+
+    bool operator==(const Vertex &other) const
+    {
+        return pos == other.pos;
+    }
+};
+
+namespace std
+{
+    template <>
+    struct hash<Vertex>
+    {
+        size_t operator()(Vertex const &vertex) const
+        {
+            return ((hash<glm::vec3>()(vertex.pos)) >> 1);
+        }
+    };
+}
+
+std::vector<Vertex> vertices;
+std::vector<simd::float3> fvertices;
+std::vector<uint16_t> indices;
+
 Renderer::Renderer()
 {
      std::cout << "Renderer Test\n";
@@ -20,6 +59,7 @@ Renderer::Renderer( MTL::Device* pDevice )
     _pCommandQueue = _pDevice->newCommandQueue();
     buildShaders();
     buildBuffers();
+    buildDepthStencilStates();
 }
 
 Renderer::~Renderer()
@@ -33,7 +73,7 @@ Renderer::~Renderer()
 
 void Renderer::buildShaders()
 {
-     std::ifstream in("/Users/kiseop/development/KSRenderer/Renderer/shader/shader.metal");
+     std::ifstream in("/Users/gimgiseob/Dev/KSRenderer/Renderer/shader/shader.metal");
      std::string shaderSource;
      if (in.is_open()) {
           in.seekg(0, std::ios::end);
@@ -76,6 +116,46 @@ void Renderer::buildShaders()
 
 void Renderer::buildBuffers()
 {
+        tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "/Users/gimgiseob/Dev/KSRenderer/Resource/viking_room.obj"))
+    {
+        throw std::runtime_error(warn + err);
+    }
+
+     std::unordered_map<Vertex, uint16_t> uniqueVertices{};
+
+    for (const auto &shape : shapes)
+    {
+        for (const auto &index : shape.mesh.indices)
+        {
+            Vertex vertex{};
+
+            vertex.pos = {
+                    attrib.vertices[3 * index.vertex_index + 0],
+                    attrib.vertices[3 * index.vertex_index + 1],
+                    attrib.vertices[3 * index.vertex_index + 2]};
+
+                    simd::float3 v= {attrib.vertices[3 * index.vertex_index + 0],
+            attrib.vertices[3 * index.vertex_index + 1],
+            attrib.vertices[3 * index.vertex_index + 2]};
+            
+
+            if (uniqueVertices.count(vertex) == 0)
+            {
+                uniqueVertices[vertex] = static_cast<uint16_t>(vertices.size());
+                vertices.push_back(vertex); 
+                fvertices.push_back(v);               
+            }
+            indices.push_back(uniqueVertices[vertex]);
+        }
+    }
+
+    std::cout<<fvertices.size() <<std::endl ;
+    std::cout<<indices.size() <<std::endl ;
      const size_t NumVertices = 4;
      simd::float3 positions[NumVertices] =
     {
@@ -85,10 +165,6 @@ void Renderer::buildBuffers()
         { 0.8f, 0.8f, 0.0f }
     };
 
-     uint16_t indices[] =  {
-          0, 1, 2,
-          2, 3, 0,
-     };
 
     simd::float3 colors[NumVertices] =
     {
@@ -98,26 +174,38 @@ void Renderer::buildBuffers()
         {  0.8f, 0.0f, 1.0 }
     };
 
-    const size_t positionsDataSize = NumVertices * sizeof( simd::float3 );
     const size_t colorDataSize = NumVertices * sizeof( simd::float3 );
-    const size_t indexDataSize = sizeof(indices);
 
 
-    MTL::Buffer* pVertexPositionsBuffer = _pDevice->newBuffer( positionsDataSize, MTL::ResourceStorageModeManaged );
+    MTL::Buffer* pVertexPositionsBuffer = _pDevice->newBuffer( fvertices.size() * sizeof( simd::float3 ), MTL::ResourceStorageModeManaged );
     MTL::Buffer* pVertexColorsBuffer = _pDevice->newBuffer( colorDataSize, MTL::ResourceStorageModeManaged );
-    MTL::Buffer* pIndexBuffer = _pDevice->newBuffer( indexDataSize, MTL::ResourceStorageModeManaged );
+    MTL::Buffer* pIndexBuffer = _pDevice->newBuffer( indices.size() * sizeof(uint16_t), MTL::ResourceStorageModeManaged );
 
     _pVertexPositionsBuffer = pVertexPositionsBuffer;
     _pVertexColorsBuffer = pVertexColorsBuffer;
     _pIndexBuffer = pIndexBuffer;
 
-    memcpy( _pVertexPositionsBuffer->contents(), positions, positionsDataSize );
+    std::cout<<"bb"<<fvertices.size() <<std::endl ;
+
+    memcpy( _pVertexPositionsBuffer->contents(), fvertices.data(), fvertices.size() * sizeof( fvertices[0] ) );
     memcpy( _pVertexColorsBuffer->contents(), colors, colorDataSize );
-    memcpy( _pIndexBuffer->contents(), indices, indexDataSize );
+    memcpy( _pIndexBuffer->contents(), indices.data(), indices.size() * sizeof(uint16_t) );
 
     _pVertexPositionsBuffer->didModifyRange( NS::Range::Make( 0, _pVertexPositionsBuffer->length() ) );
     _pVertexColorsBuffer->didModifyRange( NS::Range::Make( 0, _pVertexColorsBuffer->length() ) );
     _pIndexBuffer->didModifyRange( NS::Range::Make( 0, _pIndexBuffer->length() ) );
+}
+
+void Renderer::buildDepthStencilStates()
+{
+    MTL::DepthStencilDescriptor* pDsDesc = MTL::DepthStencilDescriptor::alloc()->init();
+    pDsDesc->setDepthCompareFunction( MTL::CompareFunction::CompareFunctionLess );
+    pDsDesc->setDepthWriteEnabled( true );
+
+    
+    _pDepthStencilState = _pDevice->newDepthStencilState( pDsDesc );
+
+    pDsDesc->release();
 }
 
 void Renderer::draw( MTK::View* pView )
@@ -129,10 +217,11 @@ void Renderer::draw( MTK::View* pView )
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
 
     pEnc->setRenderPipelineState( _pPSO );
+    //pEnc->setDepthStencilState( _pDepthStencilState );
     pEnc->setVertexBuffer( _pVertexPositionsBuffer, 0, 0 );
     pEnc->setVertexBuffer( _pVertexColorsBuffer, 0, 1 );
-    //pEnc->drawPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6) );
-    pEnc->drawIndexedPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, 6, MTL::IndexType::IndexTypeUInt16, _pIndexBuffer, 0, 1);
+    //pEnc->drawPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(indices.size()) );
+    pEnc->drawIndexedPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(indices.size()), MTL::IndexType::IndexTypeUInt16, _pIndexBuffer, 0, 1);
 
     pEnc->endEncoding();
     pCmd->presentDrawable( pView->currentDrawable() );

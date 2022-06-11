@@ -5,6 +5,7 @@
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
 
+
 class Renderer
 {
     public:
@@ -16,6 +17,7 @@ class Renderer
     private:
         void buildShaders();
         void buildBuffers();
+        void buildDepthStencilStates();
     private:
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
@@ -23,4 +25,5 @@ class Renderer
         MTL::Buffer* _pVertexPositionsBuffer;
         MTL::Buffer* _pVertexColorsBuffer;
         MTL::Buffer* _pIndexBuffer;
+        MTL::DepthStencilState* _pDepthStencilState;
 };

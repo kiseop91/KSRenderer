@@ -13,7 +13,7 @@ v2f vertex vertexMain( uint vertexId [[vertex_id]],
 {
     v2f o;
     o.position = float4( positions[ vertexId ], 1.0 );
-    o.color = half3 ( colors[ vertexId ] );
+    o.color = half3 (positions[ vertexId ] );
     return o;
 }
 
